@@ -3,7 +3,7 @@ import axios from "axios";
 
 // Force localhost for development to avoid CORS issues
 const isDevelopment = process.env.NODE_ENV === 'development' || typeof window !== 'undefined' && window.location.hostname === 'localhost';
-const apiBaseUrl = isDevelopment ? "http://localhost:5000" : (process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:5000");
+const apiBaseUrl = isDevelopment ? "http://localhost:5000/api" : (process.env.NEXT_PUBLIC_BACKEND_API_URL || "http://localhost:5000/api");
 
 // Log the API base URL for debugging
 console.log('🔧 Development Mode:', isDevelopment);

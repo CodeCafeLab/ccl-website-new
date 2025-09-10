@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
         source: '/api/:path*',
         destination: 'http://localhost:5000/api/:path*', // Proxy to Backend
       },
+      {
+        source: '/api/:path*',
+        destination: 'http://admin.codecafelab.in/api/:path*', // Proxy to Backend
+      },
     ]
   },
   images: {
