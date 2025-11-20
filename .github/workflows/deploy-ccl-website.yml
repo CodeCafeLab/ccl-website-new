@@ -28,15 +28,26 @@ jobs:
 
             export GIT_USER="CodeCafeLab"
             export GIT_TOKEN="${{ secrets.GIT_ACCESS_TOKEN }}"
+            REPO_URL="https://${GIT_USER}:${GIT_TOKEN}@github.com/CodeCafeLab/CCL_Website_Latest.git"
+            BRANCH="main"
+            DEPLOY_DIR="/var/www/codecafe_website"
 
-            cd /var/www/codecafe_website
+            mkdir -p "$DEPLOY_DIR"
+            cd "$DEPLOY_DIR"
 
-            git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/CodeCafeLab/CCL_Website_Latest.git
-            git fetch --all
-            git reset --hard origin/main
-            git pull origin main
+            if [ -d .git ]; then
+              echo "Found .git — updating repo..."
+              git remote set-url origin "$REPO_URL" || true
+              git fetch --all --tags --prune
+              git reset --hard "origin/${BRANCH}"
+              git clean -fd
+            else
+              echo "No .git found — cloning fresh..."
+              rm -rf "$DEPLOY_DIR"/*
+              git clone --depth 1 --branch "$BRANCH" "$REPO_URL" .
+            fi
 
-            npm install
+            npm install --legacy-peer-deps
             npm run build
 
             pm2 restart codecafelab || pm2 start npm --name codecafelab -- run start
