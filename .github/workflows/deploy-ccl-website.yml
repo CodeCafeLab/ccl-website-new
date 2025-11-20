@@ -1,0 +1,44 @@
+name: Deploy CCL Website
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GIT_ACCESS_TOKEN }}
+
+      - name: Deploy CCL Website Frontend
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: 168.231.112.124
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          script: |
+            set -e
+            echo "🚀 Deploying CCL Website..."
+
+            export GIT_USER="CodeCafeLab"
+            export GIT_TOKEN="${{ secrets.GIT_ACCESS_TOKEN }}"
+
+            cd /var/www/codecafe_website
+
+            git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/CodeCafeLab/CCL_Website_Latest.git
+            git fetch --all
+            git reset --hard origin/main
+            git pull origin main
+
+            npm install
+            npm run build
+
+            pm2 restart codecafelab || pm2 start npm --name codecafelab -- run start
+
+            echo "✅ CCL Website deployed successfully!"
