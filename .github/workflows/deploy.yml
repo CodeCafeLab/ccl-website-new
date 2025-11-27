@@ -49,13 +49,13 @@ jobs:
             npm run build
             
             # Create PM2 ecosystem file for port configuration
-            cat > ecosystem.config.js << EOF
+            cat > ecosystem.config.cjs << 'EOF'
             module.exports = {
               apps: [{
                 name: 'ccl-website',
                 script: 'npm',
                 args: 'run start',
-                cwd: '$DEPLOY_DIR',
+                cwd: '/var/www/ccl-website-new',
                 env: {
                   PORT: 9004
                 }
@@ -65,7 +65,7 @@ jobs:
 
             # Restart PM2 process
             echo "🔄 Restarting PM2 process..."
-            pm2 restart ccl-website || pm2 start ecosystem.config.js
+            pm2 restart ccl-website || pm2 start ecosystem.config.cjs
             
             echo "✅ CCL Website deployed successfully!"
 
