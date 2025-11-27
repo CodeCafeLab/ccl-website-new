@@ -20,29 +20,34 @@ jobs:
           script: |
             set -e
             echo "🚀 Deploying CCL Website..."
-
+            
+            DEPLOY_DIR="/var/www/ccl-website-new"
             REPO_URL="https://github.com/CodeCafeLab/ccl-website-new.git"
             BRANCH="main"
-            DEPLOY_DIR="/var/www/ccl-website-new"
-
+            
+            # Navigate to deployment directory
             mkdir -p "$DEPLOY_DIR"
             cd "$DEPLOY_DIR"
-
+            
+            # Pull latest code
             if [ -d .git ]; then
-              echo "Found .git — updating repo..."
-              git remote set-url origin "$REPO_URL" || true
-              git fetch --all --tags --prune
+              echo "📥 Pulling latest code..."
+              git fetch origin
               git reset --hard "origin/${BRANCH}"
               git clean -fd
             else
-              echo "No .git found — cloning fresh..."
-              rm -rf "$DEPLOY_DIR"/*
+              echo "📥 Cloning repository..."
               git clone --depth 1 --branch "$BRANCH" "$REPO_URL" .
             fi
-
+            
+            # Install dependencies
+            echo "📦 Installing dependencies..."
             npm install --legacy-peer-deps
+            
+            # Build the application
+            echo "🔨 Building application..."
             npm run build
-
+            
             # Create PM2 ecosystem file for port configuration
             cat > ecosystem.config.js << EOF
             module.exports = {
@@ -59,6 +64,8 @@ jobs:
             EOF
 
             # Restart PM2 process
+            echo "🔄 Restarting PM2 process..."
             pm2 restart ccl-website || pm2 start ecosystem.config.js
-
+            
             echo "✅ CCL Website deployed successfully!"
+
