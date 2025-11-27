@@ -30,7 +30,7 @@ import Image from "next/image";
 import BlogPostCard from "@/components/blog/BlogPostCard";
 import QuoteFormSheet from "@/components/pricing/QuoteFormSheet";
 import { categories, BlogPost, Product } from "@/types";
-import { apiClient, getProducts } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 import * as LucideIcons from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -73,15 +73,19 @@ export default function HomePage() {
       .then((res) => {
         setCategories(res.data);
       })
-      .catch(() => {
-        // Handle error silently or show a message
+      .catch((error) => {
+        console.error("Error fetching categories:", error);
+        // Set empty array on timeout/network errors to prevent UI breakage
+        if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
+          setCategories([]);
+        }
       })
       .finally(() => {
         setLoading(false);
       });
   }, []);
 
-  // Fetch blogs using apiClient
+  // Fetch blogs directly from backend on port 9002
   useEffect(() => {
     const fetchBlogs = async () => {
       setPostsLoading(true);
@@ -95,8 +99,12 @@ export default function HomePage() {
           excerpt: blog.summary,
         }));
         setBlogPosts(mapped.slice(0, 3));
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching blogs for homepage:", err);
+        // Set empty array on timeout/network errors
+        if (err.code === 'ECONNABORTED' || err.code === 'ERR_NETWORK') {
+          setBlogPosts([]);
+        }
       } finally {
         setPostsLoading(false);
       }
@@ -104,19 +112,24 @@ export default function HomePage() {
     fetchBlogs();
   }, []);
 
-  // Fetch featured products from API
+  // Fetch featured products directly from backend on port 9002
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
       setProductsLoading(true);
       try {
-        const response = await getProducts();
+        const res = await apiClient.get("/products");
+        const data = res.data;
         // Filter featured products and take first 2
-        const featured = response.data
+        const featured = data
           .filter((product: Product) => product.is_featured === 1)
           .slice(0, 2);
         setFeaturedProducts(featured);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching featured products:", error);
+        // Set empty array on timeout/network errors
+        if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
+          setFeaturedProducts([]);
+        }
       } finally {
         setProductsLoading(false);
       }
@@ -133,8 +146,12 @@ export default function HomePage() {
         // Filter only published reviews if needed
         setClientReviews(res.data.filter((r: any) => r.published));
       })
-      .catch(() => {
-        // Handle error
+      .catch((error) => {
+        console.error("Error fetching client reviews:", error);
+        // Set empty array on timeout/network errors
+        if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') {
+          setClientReviews([]);
+        }
       })
       .finally(() => {
         setReviewsLoading(false);

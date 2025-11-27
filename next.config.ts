@@ -11,18 +11,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*', // Proxy to Backend
-      },
-      {
-        source: '/api/:path*',
-        destination: 'http://admin.codecafelab.in/api/:path*', // Proxy to Backend
-      },
-    ]
-  },
+  // API routes handle their own proxying logic
+  // Some routes are self-contained (contact, consultancy, etc.)
+  // Others use apiClient which dynamically detects the backend URL
+  // No rewrites needed - API routes handle everything
   images: {
     remotePatterns: [
       {

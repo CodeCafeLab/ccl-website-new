@@ -3,10 +3,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { FeaturedVideo, YouTubeShort } from "@/types";
-import Image from "next/image";
-import { Card, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Film, PlayCircle, Loader2, AlertTriangle } from "lucide-react";
+import { Film, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api";
 import FirebaseVideoPlayer from "../common/FirebaseVideoPlayer"; // Import the new component
@@ -66,11 +64,20 @@ export default function FeaturedVideosSection() {
 
     const fetchVideos = async () => {
       try {
+        // Call backend directly on port 9002
         const response = await apiClient.get("/quick-bites");
         const data = response.data;
-        setFeaturedVideos(data || []);
+        // Ensure data is an array
+        setFeaturedVideos(Array.isArray(data) ? data : []);
       } catch (err: any) {
-        setError(err.message || "Failed to load videos");
+        console.error("Error fetching videos:", err);
+        // Don't set error if it's a network or timeout issue - just show empty list
+        if (err.code === 'ERR_NETWORK' || err.code === 'ECONNABORTED' || err.message?.includes('Network') || err.message?.includes('timeout')) {
+          console.warn("Network/timeout error - backend may be unavailable on port 9002");
+          setFeaturedVideos([]);
+        } else {
+          setError(err.message || "Failed to load videos");
+        }
       } finally {
         setLoading(false);
       }

@@ -9,18 +9,23 @@ export async function GET(req: NextRequest) {
     // Create a dynamic API client that works with both domains
     const apiClient = createApiClient(hostname);
     
-    const res = await apiClient.get(`/categories`);
+    const res = await apiClient.get(`/blogs`);
 
     if (res.status !== 200) {
-      throw new Error(`Failed to fetch categories: ${res.statusText}`);
+      throw new Error(`Failed to fetch blogs: ${res.statusText}`);
     }
     
     return NextResponse.json(res.data);
   } catch (error: any) {
-    console.error("API Error fetching categories:", error);
+    console.error("API Error fetching blogs:", error);
     return NextResponse.json(
-      { message: "Failed to fetch categories", error: error.message },
-      { status: 500 }
+      { 
+        message: "Failed to fetch blogs", 
+        error: error.message || error.response?.data?.message || "Unknown error",
+        details: error.response?.data 
+      },
+      { status: error.response?.status || 500 }
     );
   }
 }
+
