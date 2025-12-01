@@ -5,48 +5,23 @@ on:
     branches:
       - main
 
-env:
-  NODE_VERSION: '20'
-
 jobs:
-  quality-checks:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint --if-present
-
-      - name: Build
-        run: npm run build
-
   deploy:
-    needs: quality-checks
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy over SSH
+      - name: Deploy CCL Website
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
+          host: 168.231.112.124
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
           script: |
-            set -euo pipefail
-            PROJECT_DIR="/var/www/ccl-website-new"
+            set -e
+            echo "🚀 Deploying CCL Website..."
 
-            echo "🚀 Deploying CCL Website to ${PROJECT_DIR}"
-            cd "${PROJECT_DIR}"
+            PROJECT_DIR="/var/www/ccl-website-new"
+            cd "$PROJECT_DIR"
 
             git fetch origin main --tags
             git reset --hard origin/main
@@ -56,10 +31,10 @@ jobs:
             npm run build
 
             if pm2 describe codecafelab >/dev/null 2>&1; then
-              pm2 reload codecafelab
+              pm2 restart codecafelab
             else
               pm2 start npm --name codecafelab -- start -- -p 9004
             fi
 
             pm2 save
-            echo "✅ CCL Website deployed successfully"
+            echo "✅ CCL Website deployed successfully!"
